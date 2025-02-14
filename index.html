@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Love Calculator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+            color: white;
+        }
+        .hidden { display: none; }
+        #calculatorSection { background: linear-gradient(to bottom, #ff0000, #ff4d4d); padding: 20px; }
+        #historySection { background: linear-gradient(to bottom, #222, #444); padding: 20px; }
+        input, button {
+            margin: 10px;
+            padding: 10px;
+            font-size: 16px;
+        }
+        button {
+            background-color: white;
+            color: black;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Love Calculator Section -->
+    <div id="calculatorSection">
+        <h2>Love Calculator</h2>
+        <input type="text" id="userName" placeholder="Your Name">
+        <input type="text" id="partnerName" placeholder="Partner's Name">
+        <button onclick="calculateLove()">Calculate</button>
+        <h3 id="lovePercentage"></h3>
+        <button onclick="showHistory()">View History</button>
+    </div>
+
+    <!-- History Section -->
+    <div id="historySection" class="hidden">
+        <h2>History</h2>
+        <ul id="historyList"></ul>
+        <button onclick="backToCalculator()">Back</button>
+    </div>
+
+    <!-- Firebase SDK (8.x version) -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+    <script>
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCkSMu4CDU3ZOYzHNIMB9j9evM4g_mWarw",
+            authDomain: "love-calculator-lc7.firebaseapp.com",
+            databaseURL: "https://love-calculator-lc7-default-rtdb.firebaseio.com",
+            projectId: "love-calculator-lc7",
+            storageBucket: "love-calculator-lc7.firebasestorage.app",
+            messagingSenderId: "433313767249",
+            appId: "1:433313767249:web:c437877252d5ce35483d70"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        // Love Percentage Calculation
+        function calculateLove() {
+            let userName = document.getElementById("userName").value;
+            let partnerName = document.getElementById("partnerName").value;
+
+            if (userName.length < 3 || partnerName.length < 3) {
+                alert("Please enter valid names.");
+                return;
+            }
+
+            let lovePercentage = Math.floor(Math.random() * 100) + 1;
+            document.getElementById("lovePercentage").innerText = `Love Percentage: ${lovePercentage}%`;
+
+            // Save love result to Firebase
+            saveLoveResult(userName, partnerName, lovePercentage);
+        }
+
+        // Save the result to Firebase Realtime Database
+        function saveLoveResult(userName, partnerName, lovePercentage) {
+            let uniqueId = Date.now(); // Unique ID for each entry
+
+            // Save data to Firebase
+            db.ref("love_calculator/" + uniqueId).set({
+                userName: userName, // User's name
+                partnerName: partnerName, // Partner's name
+                lovePercentage: lovePercentage, // Love percentage
+                timestamp: new Date().toISOString() // Timestamp
+            }).then(() => {
+                console.log("Data Saved Successfully!");
+            }).catch(error => {
+                console.error("Error: ", error);
+            });
+        }
+
+        // Show History from Firebase
+        function showHistory() {
+            db.ref("love_calculator").once("value", (snapshot) => {
+                let historyList = document.getElementById("historyList");
+                historyList.innerHTML = ''; // Clear old history
+
+                snapshot.forEach((childSnapshot) => {
+                    let data = childSnapshot.val();
+                    console.log("Data from Firebase:", data); // Debugging: Check what is being returned
+
+                    // Create list item for each history entry
+                    let listItem = document.createElement("li");
+                    listItem.innerText = `${data.userName} + ${data.partnerName}: ${data.lovePercentage}%`;
+                    historyList.appendChild(listItem);
+                });
+
+                // Hide Calculator Section, Show History Section
+                document.getElementById("calculatorSection").style.display = "none";
+                document.getElementById("historySection").style.display = "block";
+            });
+        }
+
+        // Back to Calculator
+        function backToCalculator() {
+            document.getElementById("historySection").style.display = "none";
+            document.getElementById("calculatorSection").style.display = "block";
+        }
+    </script>
+</body>
+</html>
